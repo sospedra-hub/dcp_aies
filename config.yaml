@@ -42,8 +42,7 @@ specify_last_test_year:   off  # off # last  year test sample  (off <=> script c
 
 # set space mask for training  (choose one) -- if called
 space_mask_for_training : # saved as nan_mask.nc in output path to be read by load2map
-- nan_mask_SOMFFN_v2022_CanESM5.0-wmo-v2025.0   # based on indicated obs/fct data 
-# - nan_mask_SOMFFN_v2023_CanESM5.0-wmo-v2025.0     # based on indicated obs/fct data
+# - <your_space_mask.nc>   # write and uncomment your space mask here, otherwise load2map will use default
 
 # parameters -- train2map 
 load_space_mask : True     # if True, load space_mask_for_training
