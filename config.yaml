@@ -1,0 +1,126 @@
+---
+# input path modules (location of cloned scripts in local computer)
+dir_source: <path_to_cloned_repo>
+
+# input paths for train2map (preamble -see end paths in module_info_[mdl/obs].py)
+dir_frnt_obs: <path_to_obs>
+dir_frnt_mdl: <path_to_mdl>
+dir_frnt_l2m: <path_to_trained_ann_model>
+
+# output path for adjusted forecasts (input path for diagnostics)
+dir_frnt_adj: <path_to_adj_forecasts>
+
+# output path for diagnostics
+dir_frnt_diag: <path_to_diagnostic_plots>
+
+# input basic info
+variable:                      # variables (choose one -or the first one is read in)
+- fgco2                        # air-sea CO2 flux
+
+models_to_train:               # models to train (choose one -or the first one is read in) 
+- CanESM5.0-ems                # emission-driven CanESM5.0p2
+
+models_to_test:                # models to test  (choose one -or the first one is read in) 
+- CanESM5.0-ems                # emission-driven CanESM5.0p2
+- CanESM5.0-gcb-v2023.1        # emission-driven CanESM5.0p2 contributing to GCB2023
+
+verification:                  # verification datasets (choose one -or the first one is read in) 
+- SOMFFN_v2022                 # for: fgco2 (updated/revisited up to 2021)
+
+
+number_lead_years: 5           # up to 10
+
+specify_first_train_year: off  # first year training sample   (off <=> script chooses first year available)
+specify_first_test_year:  1986 # first year test sample       (off <=> script chooses first year after last obs year)
+specify_last_test_year:   off  # off # last  year test sample  (off <=> script chooses last year available)   
+
+
+# ------------------------------------------------------
+# the following switches are for ML-based adjustments
+# -- training model and mapping and/or loading model and mapping
+# ------------------------------------------------------
+
+# set space mask for training  (choose one) -- if called
+space_mask_for_training : # saved as nan_mask.nc in output path to be read by load2map
+- nan_mask_SOMFFN_v2022_CanESM5.0-wmo-v2025.0   # based on indicated obs/fct data 
+# - nan_mask_SOMFFN_v2023_CanESM5.0-wmo-v2025.0     # based on indicated obs/fct data
+
+# parameters -- train2map 
+load_space_mask : True     # if True, load space_mask_for_training
+n_ens           : 1        # ANN ensemble size -- different random seeds for weights and biases 
+n_runs          : 1        # Number of training runs -- ...
+save_model      : True     # if True, save ANN model
+
+# parameters -- load2map 
+save_output        : True # if True, saves adjusted forecast for given test years
+test_years         :      # list of forecast initial years to be adjusted with trained model (previously saved)
+- 2022
+
+
+# ------------------------------------------------------
+# the following switches are for bias and trend adjustments 
+# ------------------------------------------------------
+
+# switches for sequential bias correction (uses models_to_train)
+do_badj: True                 # if True, do bias correction
+use_ensemble_badj: False      # if True, copy ensemble; if False, copy ensemble mean
+do_metadata_badj: True        # if True, copy metadata to file
+save_forecasts_badj: True     # if True, save out-of-sample adjusted forecasts to file 
+save_hindcasts_badj: False    # if True, save in-sample adjusted forecasts to file
+
+# switches for sequential trend correction (uses models_to_train)
+do_tadj: True                 # if True, do linear trend correction
+do_glbavg_based_trend: False  # if True, scale local trends; if False, replace local trends with obs  
+use_ensemble_tadj: False      # if True, copy ensemble; if False, copy ensemble mean
+do_metadata_tadj: True        # if True, copy metadata to file
+save_forecasts_tadj: True     # if True, save out-of-sample adjusted forecasts to file 
+save_hindcasts_tadj: False    # if True, save in-sample adjusted forecasts to file
+
+
+# ------------------------------------------------------
+# the following values/switches are for diagnostics only
+# they are to be left unchanged unless there is interest 
+# on specific results/omissions
+# -- the default is used for the AIES paper
+# ------------------------------------------------------
+
+# switch to show or not forecasts
+add_fct : True                # if True, show forecast in plots
+
+# input climatological period (for diagnostics) --if needed 
+y0_climatology: 1991          # first year for climatological period
+y1_climatology: 2020          # last  year for climatological period
+
+# input data options for plots 
+list_data_options:            
+- obs           # for verification
+- fct           # forecast (default: initialized one year after min of obs/hnd last year)
+- fct_badj      # forecast out-of-sample bias adj  (hnd/obs clim over training period)
+- fct_tadj      # forecast out-of-sample trend adj (hnd/obs over training period)
+- fct_nadj      # forecast out-of-sample nn adj    (hnd/obs pairs over training period)
+- hnd           # hindcast (default: initialized each year < min of obs/hnd last year)
+- hnd_badj      # forecast out-of-sample bias adj  (hnd/obs clim over sequential training period)
+- hnd_tadj      # forecast out-of-sample trend adj (hnd/obs over sequential training period)
+- hnd_nadj      # forecast out-of-sample nn adj    (hnd/obs pairs over sequential training period)
+
+# input deterministic skill measures (pointwise) 
+list_2D_measures:  
+# - bias  # climatological bias
+# - mse   # mean square error
+- rmse  # root mean square error
+- corr  # anomaly correlation coefficient (acc)
+- cord  # acc of linearly detrended data
+# - msss  # mean square skill score
+
+# input deterministic skill measures (global) 
+list_1D_measures:  # global averages of 2D measures plus:            
+- patc  # pattern correlation (area weighted)       
+
+# if interpolate, then choose resolution (not implemented yet)
+choose_common_resolution :       # interpolation grid (default)
+- '360x180' 
+
+# mask specified domain (not implemented yet)   
+choose_domain :                   # domain (default)
+- 'global'
+
